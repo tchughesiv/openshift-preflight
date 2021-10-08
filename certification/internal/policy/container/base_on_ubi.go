@@ -20,6 +20,28 @@ func (p *BasedOnUBICheck) Validate(imgRef certification.ImageReference) (bool, e
 	if err != nil {
 		return false, err
 	}
+	layers, err := imgRef.ImageInfo.Layers()
+	if err != nil {
+		return false, err
+	}
+
+	log.Info("")
+	for _, layer := range layers {
+		reader, err := layer.Uncompressed()
+		if err != nil {
+			return false, err
+		}
+		reader.Read()
+
+		mType, err := layer.MediaType()
+		if err != nil {
+			return false, err
+		}
+
+		log.Info(mType)
+	}
+	log.Info(labels["com.redhat.component"])
+	log.Info("")
 
 	osRelease, err := p.getOsReleaseContents(imgRef.ImageFSPath)
 	if err != nil {
@@ -35,6 +57,7 @@ func (p *BasedOnUBICheck) getLabels(image cranev1.Image) (map[string]string, err
 	if err != nil {
 		return nil, err
 	}
+
 	return configFile.Config.Labels, nil
 }
 
